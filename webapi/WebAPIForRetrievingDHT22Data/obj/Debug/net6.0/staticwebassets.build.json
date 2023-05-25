@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "a+XLUoqvCr4kLS/6OuIbvJcmLFvUBX9x8NPfIh31JS0=",
+  "Source": "WebAPIForRetrievingDHT22Data",
+  "BasePath": "_content/WebAPIForRetrievingDHT22Data",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
