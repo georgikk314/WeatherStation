@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\WebApiForRetrievingDht22Data.props" />
+</Project>
