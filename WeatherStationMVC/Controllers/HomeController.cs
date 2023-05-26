@@ -16,13 +16,13 @@ namespace WeatherStationMVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            
+            string apiResponse = "";
             List<TemperatureAndHumidity> TempAndHumidity = new List<TemperatureAndHumidity>();
             using (var httpClient = new HttpClient())
             {
-                using (var response = await httpClient.GetAsync("http://localhost:5097/api/WeatherRecords"))
+                using (var response = await httpClient.GetAsync("http://localhost:5261/api/WeatherRecords"))
                 {
-                    string apiResponse = await response.Content.ReadAsStringAsync();
+                    apiResponse = await response.Content.ReadAsStringAsync();
                     TempAndHumidity = JsonConvert.DeserializeObject<List<TemperatureAndHumidity>>(apiResponse);
                 }
             }        
