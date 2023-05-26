@@ -26,8 +26,7 @@ void setup() {
 }
 
 void loop() {
-  delay(60000);
-
+  
   // Read temperature and humidity from the DHT22 sensor
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
@@ -56,4 +55,7 @@ void loop() {
       Serial.printf("HTTP POST request failed. Error code: %s\n", http.errorToString(httpResponseCode).c_str());
     }
   }
+  
+  delay(60000);
+
 }
