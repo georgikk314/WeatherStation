@@ -1,122 +1,59 @@
-/*
-  Rui Santos
-  Complete project details at Complete project details at https://RandomNerdTutorials.com/esp8266-nodemcu-http-get-post-arduino/
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-  
-  Code compatible with ESP8266 Boards Version 3.0.0 or above 
-  (see in Tools > Boards > Boards Manager > ESP8266)
-*/
-
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#include <WiFiClient.h>
-#include "DHTesp.h"
-#include <NTPClient.h>
-#include <WiFiUdp.h>
+#include <DHT.h>
 
-const long utcOffsetInSeconds = 10800;     //UTC offset in seconds
-char weekDays[7][12]  = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
-char months[12][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+#define WIFI_SSID "ZTE_12A4E1"
+#define WIFI_PASSWORD "3T7GT62Q3U"
 
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org");
-DHTesp dht;
- 
-const char* ssid = "M-Tel_7A6F";
-const char* password = "4857544300398D9B";
+#define API_ENDPOINT "http://c53f720eec8d09.lhr.life/api/WeatherRecords"  // Replace with your API endpoint URL
+#define DHT_PIN 12
+#define DHT_TYPE DHT22
 
-String currentDate = ""; // ne sum go testval nadqvam se da raboti :)
-
-// the following variables are unsigned longs because the time, measured in
-// milliseconds, will quickly become a bigger number than can be stored in an int.
-unsigned long lastTime = 0;
-
-unsigned long timerDelay = 5000;
+DHT dht(DHT_PIN, DHT_TYPE);
 
 void setup() {
-  timeClient.begin();
-  timeClient.setTimeOffset(10800);
-
-
-  Serial.begin(115200); 
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting");
-  while(WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
- 
-  Serial.println("Timer set to 5 seconds (timerDelay variable), it will take 5 seconds before publishing the first reading.");
-
-  dht.setup(2, DHTesp::DHT22);
+  Serial.begin(115200);
   
+  // Connect to Wi-Fi
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi!");
+
+  dht.begin();
 }
 
 void loop() {
+  delay(60000);
 
-    timeClient.update();
+  // Read temperature and humidity from the DHT22 sensor
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
 
-    time_t epochTime = timeClient.getEpochTime();
-    String formattedTime = timeClient.getFormattedTime();
+  // Check if any readings failed
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Failed to read sensor data!");
+    return;
+  }
 
-    //Get a time structure
-    struct tm *ptm = gmtime ((time_t *)&epochTime); 
-    int monthDay = ptm->tm_mday;
-    int currentMonth = ptm->tm_mon+1;
-    int currentYear = ptm->tm_year+1900;
-    if(currentMonth < 0){
-      String currentDate = String(currentYear) + "-" + "0" + currentMonth + "-" + String(monthDay);
+  // Create JSON payload
+  String payload = "{\"temperature\":" + String(temperature) + ",\"humidity\":" + String(humidity) + "}";
 
+  // Send HTTP POST request to the API endpoint
+  WiFiClient client;
+  HTTPClient http;
+
+  if (http.begin(client, API_ENDPOINT)) {
+    http.addHeader("Content-Type", "application/json");
+
+    int httpResponseCode = http.POST(payload);
+
+      if (httpResponseCode > 0) {
+      Serial.printf("HTTP POST request sent. Response code: %d\n", httpResponseCode);
+    } else {
+      Serial.printf("HTTP POST request failed. Error code: %s\n", http.errorToString(httpResponseCode).c_str());
     }
-    else{
-      String currentDate = String(currentYear) + "-" + currentMonth + "-" + String(monthDay);
-    }
-
-     String currentTimeAndDate = "\"" + currentDate + "T" + formattedTime + "\"";
-    Serial.println(currentTimeAndDate);
-  
-  delay(dht.getMinimumSamplingPeriod());
-
-  delay(2000);
-
-  // Send an HTTP POST request depending on timerDelay
-  if ((millis() - lastTime) > timerDelay) {
-    //Check WiFi connection status
-    if(WiFi.status()== WL_CONNECTED){
-      WiFiClient client;
-      HTTPClient http;
-
-      String serverPath = "http://843d2737add278.lhr.life/api/WeatherRecords";
-    
-      // Your Domain name with URL path or IP address with path
-      http.begin(client, serverPath.c_str());
-     
-
-      float t = dht.getTemperature();
-      float h = dht.getHumidity();
-     
-      String payload = "{\"temperature\":" + String(t) + ",\"humidity\":" + String(h) + ",\"time\":" + String(currentTimeAndDate) + "}"; 
-      Serial.println(payload);      
-
-
-       //If you need an HTTP request with a content type: application/json, use the following:
-      http.addHeader("Content-Type", "application/json"); 
-      int httpResponseCode = http.POST(payload);
-      
-      Serial.print("HTTP Response code: ");
-      Serial.println(httpResponseCode);
-             
-      http.end();
-    }
-    else {
-      Serial.println("WiFi Disconnected");
-    }
-    lastTime = millis();
   }
 }
-
