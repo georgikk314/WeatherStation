@@ -1,7 +1,11 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\WeatherStationMVC",
+    "\\WeatherStationMVC\\Controllers",
+    "\\WeatherStationMVC\\Views",
+    "\\WeatherStationMVC\\Views\\Home"
   ],
-  "SelectedNode": "\\C:\\Users\\gogom\\Source\\Repos\\WeatherStation",
+  "SelectedNode": "\\WeatherStationMVC\\Controllers\\HomeController.cs",
   "PreviewInSolutionExplorer": false
 }
