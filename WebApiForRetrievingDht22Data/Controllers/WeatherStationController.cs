@@ -90,6 +90,12 @@ namespace WebAPIForRetrievingDHT22Data.Controllers
                 return Problem("Entity set 'WeatherRecordsContext.WeatherRecords'  is null.");
             }
             weatherRecord.Time = DateTime.Now;
+            double T = weatherRecord.Temperature;
+            double RH = weatherRecord.Humidity;
+            weatherRecord.HeatIndex = -8.784695 + 1.61139411 * T + 2.338549 * RH - 0.14611605 * T * RH - 0.012308094 * T * T - 0.016424827 * RH * RH + 0.0022117323 * T * T * RH + 0.00072546 * T * RH * RH - 0.000003582 * T * T * RH * RH;
+            weatherRecord.DewTemperature = (T - ((100 - RH) / 5));
+            
+
             _context.WeatherRecords.Add(weatherRecord);
             await _context.SaveChangesAsync();
 
